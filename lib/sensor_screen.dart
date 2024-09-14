@@ -20,12 +20,15 @@ class SensorScreen extends StatefulWidget {
   _SensorScreenState createState() => _SensorScreenState();
 }
 
-class _SensorScreenState extends State<SensorScreen> {
+class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMixin {
+
   static const platform = MethodChannel('com.example.blin_glyph/proximity');
   double zAxis = 0;
   bool isProximityClose = false;
   late StreamSubscription<AccelerometerEvent> accelerometerSubscription;
   late double sensitivityThreshold;
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
   final NothingGlyphInterface glyphInterface = NothingGlyphInterface();
   Timer? checkTimer; // Timer for 2-second delay
   bool _isGlyphRunning=false;
@@ -33,6 +36,15 @@ class _SensorScreenState extends State<SensorScreen> {
   @override
   void initState() {
     super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 1),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+    _controller.forward();
     sensitivityThreshold = widget.initialSensitivity; // Use the passed value
     accelerometerSubscription = accelerometerEventStream().listen(
       (AccelerometerEvent event) {
@@ -118,20 +130,21 @@ class _SensorScreenState extends State<SensorScreen> {
   }
 
   Future<void> _triggerGlyphPH2() async {
+    final Phone phone;
     final GlyphTrigger glyphTrigger = GlyphTrigger(glyphInterface);
-    final Phoneis glyphInt = Phoneis();
-    Phone phone = await Phone.guessCurrentPhone(glyphInt);
+    phone = await Phone.guessCurrentPhone();
     final glyph = GlyphMap.fromIndex(phone, 4); // Update based on your requirements
     int totalZones = phone.calculateTotalZones;
     print('Current phone is: ${phone.formattedName} Number of Zones : $totalZones');
 
     // Assuming you want to use the default glyph map and phone for demonstration
-    await glyphTrigger.handleSingleGlyph(glyph,phone);
+    await glyphTrigger.initialGlyph(glyph,phone);
   }
 
   @override
   void dispose() {
     accelerometerSubscription.cancel();
+    _controller.dispose();
     checkTimer?.cancel(); // Cancel the timer when disposing the widget
     super.dispose();
   }
@@ -141,21 +154,26 @@ class _SensorScreenState extends State<SensorScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text('BlinGlyph', style: TextStyle(color: (zAxis < sensitivityThreshold && isProximityClose)? Colors.red : Colors.white, fontFamily: "Nothing")),
+        title:FadeTransition(opacity: _fadeAnimation,
+        child: Text('BlinGlyph', style: TextStyle(color: (zAxis < sensitivityThreshold && isProximityClose)? Colors.red : Colors.white, fontFamily: "Nothing"))),
         automaticallyImplyLeading: false,
         backgroundColor: Colors.black,
         actions: [
-          IconButton(
+          FadeTransition(opacity: _fadeAnimation,
+          child:IconButton(
             icon: Icon(Icons.settings, color:(zAxis < sensitivityThreshold && isProximityClose)? Colors.red : Colors.white),
             onPressed: () {
               _navigateToSensitivityAdjustScreen();
             },
+          )
           ),
         ],
       ),
-      body: Center(
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Center(
         child: Text('Main Sensor Screen', style: TextStyle(color: (zAxis < sensitivityThreshold && isProximityClose)? Colors.red : Colors.white)),
       ),
-    );
+    ));
   }
 }

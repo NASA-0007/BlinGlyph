@@ -1,4 +1,7 @@
+import 'package:blin_glyph/glyph_trigger.dart';
+import 'package:nothing_glyph_interface/nothing_glyph_interface.dart';
 import 'glyph_map.dart';
+
 enum Phone {
   unknown(0),
   phone1(1),
@@ -10,7 +13,7 @@ enum Phone {
   const Phone(this.idx);
 
   static Phone fromIndex(int index) {
-    return Phone.values.firstWhere((e) => e.idx == index, orElse: () => Phone.unknown);
+    return Phone.values.firstWhere((e) => e.idx == index);
   }
 
   String get formattedName {
@@ -41,10 +44,11 @@ enum Phone {
     }
   }
 
-  static Future<Phone> guessCurrentPhone(GlyphInterface glyphInterface) async {
-    var isPhone1 = await glyphInterface.isPhone1();
-    var isPhone2 = await glyphInterface.isPhone2();
-    var isPhone2a = await glyphInterface.isPhone2a();
+  static Future<Phone> guessCurrentPhone() async {
+    NothingGlyphInterface glyphInterface=NothingGlyphInterface();
+    var isPhone1 = (await glyphInterface.is20111())!;
+    var isPhone2 = (await glyphInterface.is22111())!;
+    var isPhone2a = (await glyphInterface.is23111())!;
 
     if (isPhone1) {
       return Phone.phone1;
@@ -56,28 +60,5 @@ enum Phone {
       return Phone.phone2a;
     }
     return Phone.unknown;
-  }
-}
-
-// Define your glyph interface
-abstract class GlyphInterface {
-  Future<bool> isPhone1();
-  Future<bool> isPhone2();
-  Future<bool> isPhone2a();
-}
-
-class Phoneis extends GlyphInterface {
-  @override
-  Future<bool> isPhone1()
-  {
-    return Future.value(false);
-  }
-  Future<bool> isPhone2()
-  {
-    return Future.value(true);
-  }
-  Future<bool> isPhone2a()
-  {
-    return Future.value(true);
   }
 }

@@ -46,7 +46,7 @@ class GlyphTrigger {
     }
   }
 
-  Future<void> handleSingleGlyph(GlyphMap glyph, Phone phone) async {
+  Future<void> initialGlyph(GlyphMap glyph, Phone phone) async {
     var builder = GlyphFrameBuilder();
 
     // Choose glyph channel
@@ -113,7 +113,7 @@ void _startCountdownTimer(int startProgress) {
 
     glyphTimer = Timer.periodic(Duration(milliseconds: updateInterval), (timer) async {
 
-      progress -= (100 / (2000 / updateInterval)).toInt(); // Calculate the step decrement
+      progress -= (100 / (400 / updateInterval)).toInt(); // Calculate the step decrement
       progress = progress.clamp(0, 100); // Ensure progress stays between 0 and 100
       print("Countdown Progress: $progress%");
 

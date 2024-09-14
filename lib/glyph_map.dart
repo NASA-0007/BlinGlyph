@@ -6,6 +6,22 @@ sealed class GlyphMap {
 
   const GlyphMap(this.idx, {this.group});
 
+  static GlyphMap fromGlyphId(Phone phone, String id) {
+    if (phone == Phone.phone1) {
+      return Phone1GlyphMap.fromGlyphId(id);
+    }
+
+    if (phone == Phone.phone2) {
+      return Phone2GlyphMap.fromGlyphId(id);
+    }
+
+    if (phone == Phone.phone2a) {
+      return Phone2aGlyphMap.fromGlyphId(id);
+    }
+
+    throw UnimplementedError();
+  }
+
   static GlyphMap fromIndex(Phone phone, int id) {
     if (phone == Phone.phone1) {
       return Phone1GlyphMap.fromIndex(id);
