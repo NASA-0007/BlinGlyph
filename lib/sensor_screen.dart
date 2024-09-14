@@ -25,6 +25,7 @@ class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMix
   static const platform = MethodChannel('com.example.blin_glyph/proximity');
   double zAxis = 0;
   bool isProximityClose = false;
+  String phoneis='';
   late StreamSubscription<AccelerometerEvent> accelerometerSubscription;
   late double sensitivityThreshold;
   late AnimationController _controller;
@@ -65,6 +66,10 @@ class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMix
         checkConditions();
       }
     });
+  }
+  Future<void> getPhoneFormattedName() async {
+    Phone phone = await Phone.guessCurrentPhone();
+    phoneis= phone.formattedName;
   }
   Future<void> checkConditions() async {
     GlyphTrigger glyphTrigger = GlyphTrigger(glyphInterface);
@@ -135,12 +140,12 @@ class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMix
     phone = await Phone.guessCurrentPhone();
     final glyph = GlyphMap.fromIndex(phone, 4); // Update based on your requirements
     int totalZones = phone.calculateTotalZones;
-    print('Current phone is: ${phone.formattedName} Number of Zones : $totalZones');
+    phoneis=phone.formattedName;
+    print('Current phone is: ${phoneis} Number of Zones : $totalZones');
 
     // Assuming you want to use the default glyph map and phone for demonstration
     await glyphTrigger.initialGlyph(glyph,phone);
   }
-
   @override
   void dispose() {
     accelerometerSubscription.cancel();
@@ -151,6 +156,7 @@ class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
+    getPhoneFormattedName();
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -172,7 +178,7 @@ class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMix
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: Center(
-        child: Text('Main Sensor Screen', style: TextStyle(color: (zAxis < sensitivityThreshold && isProximityClose)? Colors.red : Colors.white)),
+        child: Text('Current Phone is : ${phoneis}', style: TextStyle(color: (zAxis < sensitivityThreshold && isProximityClose)? Colors.red : Colors.white)),
       ),
     ));
   }

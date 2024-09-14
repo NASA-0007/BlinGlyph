@@ -1,4 +1,3 @@
-import 'package:blin_glyph/glyph_trigger.dart';
 import 'package:nothing_glyph_interface/nothing_glyph_interface.dart';
 import 'glyph_map.dart';
 
@@ -61,4 +60,11 @@ enum Phone {
     }
     return Phone.unknown;
   }
+}
+class PhoneIs{
+Future<String> phoneIs() async
+{
+  Phone phone = await Phone.guessCurrentPhone();
+  return phone.formattedName;
+}
 }
