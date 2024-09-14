@@ -178,7 +178,7 @@ class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMix
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: Center(
-        child: Text('Current Phone is : ${phoneis}', style: TextStyle(color: (zAxis < sensitivityThreshold && isProximityClose)? Colors.red : Colors.white)),
+        child: Text('Current Phone is : ${phoneis}', style: TextStyle(color: (zAxis < sensitivityThreshold && isProximityClose)? Colors.red : Colors.white,fontFamily:"Nothing_ALT")),
       ),
     ));
   }
