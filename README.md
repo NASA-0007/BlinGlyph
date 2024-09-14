@@ -1,10 +1,10 @@
-# blin_glyph
+# BlinGlyph
 
-A new Flutter project.
+A NOTHING® Community Project.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+This project was initiated after getting a request from community members of NOTHING®.
 
 A few resources to get you started if this is your first Flutter project:
 
