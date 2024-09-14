@@ -138,9 +138,19 @@ class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMix
     final Phone phone;
     final GlyphTrigger glyphTrigger = GlyphTrigger(glyphInterface);
     phone = await Phone.guessCurrentPhone();
-    final glyph = GlyphMap.fromIndex(phone, 4); // Update based on your requirements
+    final glyph=GlyphMap.fromIndex(phone, 3);
+    if (phoneis=="Phone (2)"){
+    final glyph = GlyphMap.fromIndex(phone, 3); // Update based on your requirements
+    }
+    else if (phoneis=="Phone (1)")
+    {
+      final glyph = GlyphMap.fromIndex(phone, 2); // Update based on your requirements
+    }
+    else if (phoneis=="Phone (2a)")
+    {
+      final glyph = GlyphMap.fromIndex(phone, 0); // Update based on your requirements
+    }
     int totalZones = phone.calculateTotalZones;
-    phoneis=phone.formattedName;
     print('Current phone is: ${phoneis} Number of Zones : $totalZones');
 
     // Assuming you want to use the default glyph map and phone for demonstration
