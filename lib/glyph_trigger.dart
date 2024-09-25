@@ -9,7 +9,6 @@ class GlyphTrigger {
   static bool rev = false;
   Timer? glyphTimer;
   final NothingGlyphInterface glyphInterface;
-
   GlyphTrigger(this.glyphInterface);
 
   void buildChannelC(Phone phone, GlyphFrameBuilder builder) {
@@ -98,12 +97,12 @@ class GlyphTrigger {
       // Calculate progress as a percentage of 0 to 100 based on elapsed time
       progress = (elapsed / durationMs * 100).clamp(0, 100).toInt();
       print("Elapsed: $elapsed ms, Progress: $progress%");
-
       await glyphInterface.displayProgress(progress); // Display progress on glyph
       if (elapsed >= durationMs) {
+        glyphInterface.turnOff();
         timer.cancel();
         print("2 seconds reached. Glyph animation completed.");
-         glyphInterface.turnOff();// Turn off glyph after completion
+        // Turn off glyph after completion
       }
     });
   }
@@ -113,7 +112,7 @@ void _startCountdownTimer(int startProgress) {
 
     glyphTimer = Timer.periodic(Duration(milliseconds: updateInterval), (timer) async {
 
-      progress -= (100 / (400 / updateInterval)).toInt(); // Calculate the step decrement
+      progress -= (100 / (350 / updateInterval)).toInt(); // Calculate the step decrement
       progress = progress.clamp(0, 100); // Ensure progress stays between 0 and 100
       print("Countdown Progress: $progress%");
 
@@ -127,13 +126,38 @@ void _startCountdownTimer(int startProgress) {
     );
     return;
   }
-
   // Function to stop the glyph animation and cancel the timer
   void stopGlyph() {
     stopExecution = true;
     _cancelGlyphTimer();
   }
+  Future<void> flowGlyph(GlyphMap glyph, Phone phone) async {
+    var builder = GlyphFrameBuilder();
 
+    // Choose glyph channel
+    if (glyph.group != null) {
+      switch (glyph.group) {
+        case "d1":
+          builder.buildChannelD();
+          break;
+        case "c1":
+        case "c":
+          buildChannelC(phone, builder);
+          break;
+      }
+    } else {
+      builder.buildChannel(glyph.idx);
+    }
+
+    // Set common properties
+    builder.buildPeriod(150);
+    builder.buildCycles(1);
+
+    await glyphInterface.buildGlyphFrame(builder.build());
+    await glyphInterface.animate();
+    await Future.delayed(const Duration(milliseconds: 150));
+    await glyphInterface.turnOff();
+  }
   // Helper function to cancel the timer
   void _cancelGlyphTimer() {
     if (glyphTimer != null && glyphTimer!.isActive) {

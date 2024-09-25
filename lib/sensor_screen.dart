@@ -8,9 +8,11 @@ import 'glyph_trigger.dart'; // Import GlyphTrigger class
 import 'sensitivity_adjust_screen.dart'; // Import SensitivityAdjustScreen
 import 'phone.dart'; // Import Phone enum
 import 'glyph_map.dart'; // Import GlyphMap class
+import 'lock_screen.dart';
 
 class SensorScreen extends StatefulWidget {
-  final double initialSensitivity; // Add this parameter
+  final double initialSensitivity;
+
   const SensorScreen({
     super.key,
     required this.initialSensitivity,
@@ -21,19 +23,21 @@ class SensorScreen extends StatefulWidget {
 }
 
 class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMixin {
-
   static const platform = MethodChannel('com.example.blin_glyph/proximity');
   double zAxis = 0;
   bool isProximityClose = false;
-  String phoneis='';
+  String phoneis = '';
   late StreamSubscription<AccelerometerEvent> accelerometerSubscription;
   late double sensitivityThreshold;
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   final NothingGlyphInterface glyphInterface = NothingGlyphInterface();
-  Timer? checkTimer; // Timer for 2-second delay
-  bool _isGlyphRunning=false;
-  bool _isRunning=false;
+  final NothingGlyphInterface glyphInterface2 = NothingGlyphInterface();
+  Timer? checkTimer;
+  bool _isGlyphRunning = false;
+  bool _isRunning = false;
+  bool _ScreenOff = false;
+
   @override
   void initState() {
     super.initState();
@@ -46,7 +50,7 @@ class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMix
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
     _controller.forward();
-    sensitivityThreshold = widget.initialSensitivity; // Use the passed value
+    sensitivityThreshold = widget.initialSensitivity;
     accelerometerSubscription = accelerometerEventStream().listen(
       (AccelerometerEvent event) {
         setState(() {
@@ -67,47 +71,41 @@ class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMix
       }
     });
   }
+
   Future<void> getPhoneFormattedName() async {
     Phone phone = await Phone.guessCurrentPhone();
-    phoneis= phone.formattedName;
+    phoneis = phone.formattedName;
   }
+
   Future<void> checkConditions() async {
     GlyphTrigger glyphTrigger = GlyphTrigger(glyphInterface);
-    // Check if both conditions (zAxis and proximity) are met
+
     if (zAxis < sensitivityThreshold && isProximityClose) {
       if (checkTimer == null || !checkTimer!.isActive) {
-        
-        if (!_isGlyphRunning)
-        {
-        _isGlyphRunning=true;
-        _isRunning=true;
-        GlyphTrigger.stopExecution=false;
-        _triggerGlyphPH2();
+        if (!_isGlyphRunning) {
+          _isGlyphRunning = true;
+          GlyphTrigger.stopExecution=false;
+          _triggerGlyph();
         }
         // Start the timer to wait 2 seconds before triggering
-        checkTimer = Timer(Duration(seconds: 2), () {
-          _isRunning=false;
-          if (zAxis < sensitivityThreshold && isProximityClose) {
-            _isRunning=false;
-            _isGlyphRunning=false;
-            print("Conditons are Still Met");
+        checkTimer = Timer(const Duration(seconds: 2), () async {
+          if (zAxis < sensitivityThreshold && isProximityClose && _isRunning==false) {
+              if (_ScreenOff){
+              ScreenLockService.screenOff();
+              }
+              _isRunning = true;
+            await _triggerFLowGlyph();
+            print("Conditions are Still Met");
           }
         });
-      }}
-     else {
+      }
+    } 
+    else {
       checkTimer?.cancel();
       glyphTrigger.stopGlyph();
-       _isGlyphRunning=false;
-
+      _isGlyphRunning = false;
+      _isRunning = false;
       print("Not Met");
-      // Reset the timer if conditions are no longer met
-    }
-  }
-  Future<void> _checkProximitySensor() async {
-    try {
-      // Check proximity sensor updates
-    } on PlatformException catch (e) {
-      print("Failed to get proximity sensor data: '${e.message}'");
     }
   }
 
@@ -115,8 +113,9 @@ class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMix
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('sensitivityThreshold', newThreshold);
   }
+
   Future<void> _navigateToSensitivityAdjustScreen() async {
-    final updatedThreshold = await Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => SensitivityAdjustScreen(
@@ -125,42 +124,60 @@ class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMix
             setState(() {
               sensitivityThreshold = newThreshold;
             });
-            _saveSensitivityThreshold(newThreshold); // Save the updated threshold immediately
+            _saveSensitivityThreshold(newThreshold);
           },
         ),
       ),
     );
-
-    // The updatedThreshold is now handled in the onSensitivityChanged callback
   }
 
-  Future<void> _triggerGlyphPH2() async {
-    final Phone phone;
-    final GlyphTrigger glyphTrigger = GlyphTrigger(glyphInterface);
-    phone = await Phone.guessCurrentPhone();
-    final glyph=GlyphMap.fromIndex(phone, 3);
-    if (phoneis=="Phone (2)"){
-    final glyph = GlyphMap.fromIndex(phone, 3); // Update based on your requirements
+  Future<void> _triggerGlyph() async {
+    int id = 0;
+    Phone phone = await Phone.guessCurrentPhone();
+    GlyphTrigger glyphTrigger=GlyphTrigger(glyphInterface);
+    if (phoneis == "Phone (2)") {
+      id = 3;
+    } else if (phoneis == "Phone (1)") {
+      id = 7;
+    } else if (phoneis == "Phone (2a)") {
+      id = 0;
     }
-    else if (phoneis=="Phone (1)")
-    {
-      final glyph = GlyphMap.fromIndex(phone, 2); // Update based on your requirements
-    }
-    else if (phoneis=="Phone (2a)")
-    {
-      final glyph = GlyphMap.fromIndex(phone, 0); // Update based on your requirements
-    }
-    int totalZones = phone.calculateTotalZones;
-    print('Current phone is: ${phoneis} Number of Zones : $totalZones');
-
-    // Assuming you want to use the default glyph map and phone for demonstration
-    await glyphTrigger.initialGlyph(glyph,phone);
+    final glyph = GlyphMap.fromIndex(phone, id);
+    await glyphTrigger.initialGlyph(glyph, phone);
   }
+
+  Future<void> _triggerFLowGlyph() async {
+    Phone phone = await Phone.guessCurrentPhone();
+    if (phoneis == "Phone (2)") {
+      await _runGlyphSequence(phone, [24, 25, 23, 22, 21, 20, 19, 18, 2, 1, 0]);
+    } else if (phoneis == "Phone (1)") {
+      await _runGlyphSequence(phone, [7, 6, 5, 1, 0]);
+    } else if (phoneis == "Phone (2a)") {
+      await _runGlyphSequence(phone, [25, 24, 23]);
+    }
+    
+    print('Glyph Flowing Done');
+    _isGlyphRunning = false;
+  }
+
+  Future<void> _runGlyphSequence(Phone phone, List<int> sequence) async {
+    for (int id in sequence) {
+      await glyphSequence(id, phone);
+    }
+  }
+
+  Future<void> glyphSequence(int id, Phone phone) async {
+    await Future.delayed(Duration(milliseconds: 40));
+    final GlyphTrigger glyphTrigger2 = GlyphTrigger(glyphInterface2);
+    final glyph2 = GlyphMap.fromIndex(phone, id);
+    await glyphTrigger2.flowGlyph(glyph2, phone);
+  }
+
   @override
   void dispose() {
     accelerometerSubscription.cancel();
     _controller.dispose();
-    checkTimer?.cancel(); // Cancel the timer when disposing the widget
+    checkTimer?.cancel();
     super.dispose();
   }
 
@@ -170,26 +187,43 @@ class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMix
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title:FadeTransition(opacity: _fadeAnimation,
-        child: Text('BlinGlyph', style: TextStyle(color: (zAxis < sensitivityThreshold && isProximityClose)? Colors.red : Colors.white, fontFamily: "Nothing"))),
+        title: FadeTransition(
+          opacity: _fadeAnimation,
+          child: Text(
+            'BlinGlyph',
+            style: TextStyle(
+              color: (zAxis < sensitivityThreshold && isProximityClose) ? Colors.red : Colors.white,
+              fontFamily: "Nothing",
+            ),
+          ),
+        ),
         automaticallyImplyLeading: false,
         backgroundColor: Colors.black,
         actions: [
-          FadeTransition(opacity: _fadeAnimation,
-          child:IconButton(
-            icon: Icon(Icons.settings, color:(zAxis < sensitivityThreshold && isProximityClose)? Colors.red : Colors.white),
-            onPressed: () {
-              _navigateToSensitivityAdjustScreen();
-            },
-          )
+          FadeTransition(
+            opacity: _fadeAnimation,
+            child: IconButton(
+              icon: Icon(
+                Icons.settings,
+                color: (zAxis < sensitivityThreshold && isProximityClose) ? Colors.red : Colors.white,
+              ),
+              onPressed: _navigateToSensitivityAdjustScreen,
+            ),
           ),
         ],
       ),
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: Center(
-        child: Text('Current Phone is : ${phoneis}', style: TextStyle(color: (zAxis < sensitivityThreshold && isProximityClose)? Colors.red : Colors.white,fontFamily:"Nothing_ALT")),
+          child: Text(
+            'Current Phone is : $phoneis',
+            style: TextStyle(
+              color: (zAxis < sensitivityThreshold && isProximityClose) ? Colors.red : Colors.white,
+              fontFamily: "Nothing_ALT",
+            ),
+          ),
+        ),
       ),
-    ));
+    );
   }
 }

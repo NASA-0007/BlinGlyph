@@ -38,7 +38,6 @@ dependencies:
   sensors_plus: ^6.0.0
   shared_preferences: ^2.3.2
   nothing_glyph_interface: ^0.0.6
-  get_it: ^7.6.8
 
 dev_dependencies:
   flutter_test:

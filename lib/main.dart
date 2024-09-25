@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
 
   Future<double> _getSensitivityThreshold() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getDouble('sensitivityThreshold') ?? -7.5; // Default value if not set
+    return prefs.getDouble('sensitivityThreshold') ?? -5.0; // Default value if not set
   }
 
   @override

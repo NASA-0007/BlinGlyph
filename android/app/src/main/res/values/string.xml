@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BlinGlyph</string>
+    <string name="accessibility_service_description">Accessibility service is necessary for the app to work properly. The service is only active when the app is running. The service does not collect any data. The service does not have any impact on the system performance.</string>
+    <string name="accessibility_service_label">Accessibility service.</string>
+</resources>
