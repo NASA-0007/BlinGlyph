@@ -83,7 +83,7 @@ class GlyphTrigger {
     _cancelGlyphTimer();
 
     // Timer runs at 17ms intervals until the total duration (2000ms) is reached
-    glyphTimer = Timer.periodic(Duration(milliseconds: updateInterval), (timer) async {
+    glyphTimer = Timer.periodic(const Duration(milliseconds: updateInterval), (timer) async {
       if (stopExecution) {
         timer.cancel();
         stopExecution = false; // Reset the stop flag for future runs
@@ -110,7 +110,7 @@ void _startCountdownTimer(int startProgress) {
     const int updateInterval = 22; // Roughly 60 FPS, update every 17ms
     int progress = startProgress;
 
-    glyphTimer = Timer.periodic(Duration(milliseconds: updateInterval), (timer) async {
+    glyphTimer = Timer.periodic(const Duration(milliseconds: updateInterval), (timer) async {
 
       progress -= (100 / (350 / updateInterval)).toInt(); // Calculate the step decrement
       progress = progress.clamp(0, 100); // Ensure progress stays between 0 and 100
@@ -150,16 +150,98 @@ void _startCountdownTimer(int startProgress) {
     }
 
     // Set common properties
-    builder.buildPeriod(150);
+    builder.buildPeriod(80);
     builder.buildCycles(1);
 
     await glyphInterface.buildGlyphFrame(builder.build());
     await glyphInterface.animate();
-    await Future.delayed(const Duration(milliseconds: 150));
+    await Future.delayed(const Duration(milliseconds: 60));
     await glyphInterface.turnOff();
   }
+
+Future<void> multiGlyphE(Phone phone) async {
+    GlyphFrameBuilder builder;
+    // ignore: non_constant_identifier_names
+    GlyphFrameBuilder Ebuilder= GlyphFrameBuilder();
+    // Choose glyph channel
+    builder=Ebuilder.buildChannelE();
+    // Set common properties
+    builder.buildPeriod(70);
+    builder.buildCycles(1);
+
+    await glyphInterface.buildGlyphFrame(builder.build());
+    await glyphInterface.animate();
+    await Future.delayed(const Duration(milliseconds: 60));
+    await multiGlyphD(phone);
+  }
+
+Future<void> multiGlyphD(Phone phone) async {
+    GlyphFrameBuilder builder;
+    // ignore: non_constant_identifier_names
+    GlyphFrameBuilder Dbuilder= GlyphFrameBuilder();
+    // Choose glyph channel
+    builder=Dbuilder.buildChannelD();
+    // Set common properties
+    builder.buildPeriod(70);
+    builder.buildCycles(1);
+
+    await glyphInterface.buildGlyphFrame(builder.build());
+    await glyphInterface.animate();
+    await Future.delayed(const Duration(milliseconds: 60));
+    await multiGlyphC(phone);
+  }
+
+  Future<void> multiGlyphC(Phone phone) async {
+    GlyphFrameBuilder builder;
+    // ignore: non_constant_identifier_names
+    GlyphFrameBuilder Cbuilder= GlyphFrameBuilder();
+    // Choose glyph channel
+    builder=Cbuilder.buildChannelC();
+    // Set common properties
+    builder.buildPeriod(70);
+    builder.buildCycles(1);
+
+    await glyphInterface.buildGlyphFrame(builder.build());
+    await glyphInterface.animate();
+    await Future.delayed(const Duration(milliseconds: 60));
+    await multiGlyphB(phone);
+  }
+
+  Future<void> multiGlyphB(Phone phone) async {
+    GlyphFrameBuilder builder;
+    // ignore: non_constant_identifier_names
+    GlyphFrameBuilder Bbuilder= GlyphFrameBuilder();
+    // Choose glyph channel
+    builder=Bbuilder.buildChannelB();
+    // Set common properties
+    builder.buildPeriod(100);
+    builder.buildCycles(1);
+
+    await glyphInterface.buildGlyphFrame(builder.build());
+    await glyphInterface.animate();
+    await Future.delayed(const Duration(milliseconds: 80));
+    await multiGlyphA(phone);
+  }
+
+  Future<void> multiGlyphA(Phone phone) async {
+    GlyphFrameBuilder builder;
+    // ignore: non_constant_identifier_names
+    GlyphFrameBuilder Abuilder= GlyphFrameBuilder();
+    // Choose glyph channel
+    builder=Abuilder.buildChannelA();
+    // Set common properties
+    builder.buildPeriod(90);  
+    builder.buildCycles(1);
+
+    await glyphInterface.buildGlyphFrame(builder.build());
+    await glyphInterface.animate();
+    await Future.delayed(const Duration(milliseconds: 60));
+    await glyphInterface.turnOff();
+  }
+
+
   // Helper function to cancel the timer
-  void _cancelGlyphTimer() {
+  void _cancelGlyphTimer() {  
     if (glyphTimer != null && glyphTimer!.isActive) {
       glyphTimer!.cancel();
       print("Glyph timer canceled.");
