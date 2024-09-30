@@ -9,6 +9,7 @@ import 'sensitivity_adjust_screen.dart'; // Import SensitivityAdjustScreen
 import 'phone.dart'; // Import Phone enum
 import 'glyph_map.dart'; // Import GlyphMap class
 import 'lock_screen.dart';
+import 'assets.dart';
 
 class SensorScreen extends StatefulWidget {
   final double initialSensitivity;
@@ -214,6 +215,7 @@ class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
+    const assets = $AssetsImagesGlyphsGen();
     getPhoneFormattedName();
     return Scaffold(
       backgroundColor: Colors.black,
@@ -243,15 +245,29 @@ class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMix
           ),
         ],
       ),
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Center(
-          child: Text(
-            phoneis,
-            style: TextStyle(fontSize: 25,
-              color: (zAxis < sensitivityThreshold && isProximityClose) ? Colors.red : Colors.white,
-              fontFamily: "Nothing_ALT",
-            ),
+        body: FadeTransition(
+  opacity: _fadeAnimation,
+  child: Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Wrap the GIF display in a Container to set the width
+        SizedBox(
+          width: MediaQuery.of(context).size.width * 0.75, // Set width according to your preference
+          child: assets.getGifDisplay(phoneis),
+        ),
+        const SizedBox(height: 20), // Adjust this height to move the text down
+        Text(
+          phoneis,
+          style: TextStyle(
+            fontSize: 25,
+            color: (zAxis < sensitivityThreshold && isProximityClose) 
+                ? Colors.red 
+                : Colors.white,
+            fontFamily: "Nothing_ALT",
+                ),
+              ),
+            ],
           ),
         ),
       ),

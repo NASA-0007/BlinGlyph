@@ -38,6 +38,7 @@ dependencies:
   sensors_plus: ^6.0.0
   shared_preferences: ^2.3.2
   nothing_glyph_interface: ^0.0.6
+  gif: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -55,7 +56,11 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
+  assets:
+    - asset/images/glyphs/Phone-1-glyphs.gif
+    - asset/images/glyphs/Phone-2-glyphs.gif
+    - asset/images/glyphs/Phone-2a-glyphs.gif
+    - asset/images/glyphs/Unknown.gif
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
