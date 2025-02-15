@@ -1,4 +1,4 @@
-package com.example.blin_glyph;
+package com.avnasa.blin_glyph;
 
 import android.accessibilityservice.AccessibilityService;
 import android.view.accessibility.AccessibilityEvent;

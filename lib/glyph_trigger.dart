@@ -131,33 +131,6 @@ void _startCountdownTimer(int startProgress) {
     stopExecution = true;
     _cancelGlyphTimer();
   }
-  Future<void> flowGlyph(GlyphMap glyph, Phone phone) async {
-    var builder = GlyphFrameBuilder();
-
-    // Choose glyph channel
-    if (glyph.group != null) {
-      switch (glyph.group) {
-        case "d1":
-          builder.buildChannelD();
-          break;
-        case "c1":
-        case "c":
-          buildChannelC(phone, builder);
-          break;
-      }
-    } else {
-      builder.buildChannel(glyph.idx);
-    }
-
-    // Set common properties
-    builder.buildPeriod(80);
-    builder.buildCycles(1);
-
-    await glyphInterface.buildGlyphFrame(builder.build());
-    await glyphInterface.animate();
-    await Future.delayed(const Duration(milliseconds: 60));
-    await glyphInterface.turnOff();
-  }
 
 Future<void> multiGlyphE(Phone phone) async {
     GlyphFrameBuilder builder;
@@ -204,7 +177,14 @@ Future<void> multiGlyphD(Phone phone) async {
     await glyphInterface.buildGlyphFrame(builder.build());
     await glyphInterface.animate();
     await Future.delayed(const Duration(milliseconds: 60));
+    if (phone.formattedName!="Phone (2a)")
+    {
     await multiGlyphB(phone);
+    }
+    else
+    {
+      await glyphInterface.turnOff();
+    }
   }
 
   Future<void> multiGlyphB(Phone phone) async {
@@ -220,7 +200,10 @@ Future<void> multiGlyphD(Phone phone) async {
     await glyphInterface.buildGlyphFrame(builder.build());
     await glyphInterface.animate();
     await Future.delayed(const Duration(milliseconds: 80));
+    if (phone.formattedName!="Phone (2a)")
+    {
     await multiGlyphA(phone);
+    }
   }
 
   Future<void> multiGlyphA(Phone phone) async {

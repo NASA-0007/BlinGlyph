@@ -1,34 +1,33 @@
 import 'dart:async';
+import 'package:blin_glyph/accelerometer.dart';
 import 'package:flutter/material.dart';
 import 'package:nothing_glyph_interface/nothing_glyph_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart'; // For MethodChannel
-import 'package:sensors_plus/sensors_plus.dart'; // For accelerometer
 import 'glyph_trigger.dart'; // Import GlyphTrigger class
 import 'sensitivity_adjust_screen.dart'; // Import SensitivityAdjustScreen
 import 'phone.dart'; // Import Phone enum
 import 'glyph_map.dart'; // Import GlyphMap class
 import 'lock_screen.dart';
 import 'assets.dart';
-
 class SensorScreen extends StatefulWidget {
   final double initialSensitivity;
   const SensorScreen({
     super.key,
     required this.initialSensitivity,
   });
-
+  
   @override
   // ignore: library_private_types_in_public_api
   _SensorScreenState createState() => _SensorScreenState();
 }
 
 class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMixin {
-  static const platform = MethodChannel('com.example.blin_glyph/proximity');
+  static const platform = MethodChannel('com.avnasa.blin_glyph/proximity');
+  static const platform2 = MethodChannel('com.avnasa.blin_glyph/service');
   double zAxis = 0;
   bool isProximityClose = false;
   String phoneis = '';
-  late StreamSubscription<AccelerometerEvent> accelerometerSubscription;
   late double sensitivityThreshold;
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
@@ -47,7 +46,6 @@ class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMix
       duration: const Duration(seconds: 1),
       vsync: this,
     );
-
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
@@ -58,16 +56,11 @@ class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMix
     });
   });
     sensitivityThreshold = widget.initialSensitivity;
-    accelerometerSubscription = accelerometerEventStream().listen(
-      (AccelerometerEvent event) {
-        setState(() {
-          zAxis = event.z;
-        });
-      },
-      onError: (error) {
-        print('Accelerometer error: $error');
-      },
-    );
+    AccelerometerManager().addListener((value) {
+      setState(() {
+        zAxis = value;
+      });
+    });
 
     platform.setMethodCallHandler((MethodCall call) async {
       if (call.method == 'proximityChanged') {
@@ -77,6 +70,22 @@ class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMix
         checkConditions();
       }
     });
+  }
+
+  Future<void> startService() async {
+    try {
+      await platform2.invokeMethod('startService');
+    } on PlatformException catch (e) {
+      print("Failed to start service: '${e.message}'.");
+    }
+  }
+
+  Future<void> stopService() async {
+    try {
+      await platform2.invokeMethod('stopService');
+    } on PlatformException catch (e) {
+      print("Failed to stop service: '${e.message}'.");
+    }
   }
 
   Future<void> getPhoneFormattedName() async {
@@ -119,6 +128,7 @@ class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMix
       _isGlyphRunning = false;
       _isRunning = false;
       print("Not Met");
+      print(sensitivityThreshold);
     }
   }
 
@@ -152,6 +162,7 @@ class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMix
         onScreenOffChanged: (isOff) {
           setState(() {
             _ScreenOff = isOff;
+           
           });
         },
       ),
@@ -182,37 +193,27 @@ class _SensorScreenState extends State<SensorScreen> with TickerProviderStateMix
       await glyphTrigger2.multiGlyphE(phone);
     }
     else if (phoneis == "Phone (1)") {
-      await _runGlyphSequence(phone, [7, 6, 5, 1, 0]);
+      await Future.delayed(const Duration(milliseconds: 40));
+      await glyphTrigger2.multiGlyphE(phone);
     }
     else if (phoneis == "Phone (2a)") {
-      await _runGlyphSequence(phone, [25, 24, 23]);
+      await Future.delayed(const Duration(milliseconds: 40));
+      await glyphTrigger2.multiGlyphA(phone);
+      await glyphTrigger2.multiGlyphB(phone);
+      await glyphTrigger2.multiGlyphC(phone);
     }
     
     print('Glyph Flowing Done');
     _isGlyphRunning = false;
   }
 
-  Future<void> _runGlyphSequence(Phone phone, List<int> sequence) async {
-    for (int id in sequence) {
-      await glyphSequence(id, phone);
-    }
-  }
-
-  Future<void> glyphSequence(int id, Phone phone) async {
-    await Future.delayed(const Duration(milliseconds: 40));
-    final GlyphTrigger glyphTrigger2 = GlyphTrigger(glyphInterface2);
-    final glyph2 = GlyphMap.fromIndex(phone, id);
-    await glyphTrigger2.flowGlyph(glyph2, phone);
-  }
-
   @override
-  void dispose() {
-    accelerometerSubscription.cancel();
+  void dispose() async{
+     AccelerometerManager().removeListener((value) {});
     _controller.dispose();
     checkTimer?.cancel();
     super.dispose();
   }
-
   @override
   Widget build(BuildContext context) {
     const assets = $AssetsImagesGlyphsGen();

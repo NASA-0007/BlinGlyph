@@ -1,10 +1,21 @@
 import 'dart:async';
+import 'package:permission_handler/permission_handler.dart';
 import 'intro_screen.dart';
 import 'sensor_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() => runApp(const MyApp());
+void main() async
+{
+  WidgetsFlutterBinding.ensureInitialized();
+  await Permission.notification.isDenied.then((value){
+    if (value)
+    {
+      Permission.notification.request();
+    }
+  });
+  runApp(const MyApp());
+} 
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

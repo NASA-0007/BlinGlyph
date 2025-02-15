@@ -1,11 +1,12 @@
 import 'dart:async';
+import 'package:blin_glyph/accelerometer.dart';
 import 'package:flutter/material.dart';
-import 'package:sensors_plus/sensors_plus.dart'; // For accelerometer
+import 'package:flutter_accessibility_service/flutter_accessibility_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SensitivityAdjustScreen extends StatefulWidget {
   final double initialSensitivity;
-  final ValueChanged<double> onSensitivityChanged; // Callback
+  final ValueChanged<double> onSensitivityChanged;
   final ValueChanged<bool> onScreenOffChanged;
 
   const SensitivityAdjustScreen({
@@ -16,47 +17,64 @@ class SensitivityAdjustScreen extends StatefulWidget {
   });
 
   @override
-  // ignore: library_private_types_in_public_api
   _SensitivityAdjustScreenState createState() => _SensitivityAdjustScreenState();
 }
 
 class _SensitivityAdjustScreenState extends State<SensitivityAdjustScreen> {
   late double sensitivityThreshold;
   late double zAxis;
-  bool isProximityClose = false;
-  bool isScreenOff = false; // For the toggle
-  late StreamSubscription<AccelerometerEvent> accelerometerSubscription;
+  bool isScreenOff = false;
+  bool isAccessibilityEnabled = false;
 
   @override
   void initState() {
     super.initState();
-    _loadScreenOffState(); // Load the initial state
-    sensitivityThreshold = widget.initialSensitivity; // Use initial value from widget
-    zAxis = 0; // Default value
+    _loadScreenOffState();
+    sensitivityThreshold = widget.initialSensitivity;
+    zAxis = 0;
 
-    accelerometerSubscription = accelerometerEventStream().listen((event) {
-      setState(() {
-        zAxis = event.z;
-      });
-    });
+    // Add listener for accelerometer updates
+    AccelerometerManager().addListener(_onAccelerometerChanged);
   }
 
   @override
   void dispose() {
-    accelerometerSubscription.cancel();
+    // Remove listener to avoid memory leaks
+    AccelerometerManager().removeListener(_onAccelerometerChanged);
     super.dispose();
+  }
+
+  void _onAccelerometerChanged(double value) {
+    setState(() {
+      zAxis = value;
+    });
   }
 
   Future<void> _loadScreenOffState() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      isScreenOff = prefs.getBool('screenOffState') ?? false; // Default to false if not set
+      isScreenOff = prefs.getBool('screenOffState') ?? false; // Default to false
     });
   }
 
   Future<void> _saveScreenOffState(bool isOff) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('screenOffState', isOff);
+  }
+
+  Future<void> _checkAccessibilitySettings() async {
+    // Check if accessibility is enabled for your app
+    bool enabled = await FlutterAccessibilityService.isAccessibilityPermissionEnabled();
+    setState(() {
+      isAccessibilityEnabled = enabled;
+    });
+  }
+
+  Future<void> _redirectToAccessibilitySettings() async {
+    // Redirect to accessibility settings if not enabled
+    if (!isAccessibilityEnabled) {
+      FlutterAccessibilityService.requestAccessibilityPermission();
+    }
   }
 
   @override
@@ -81,9 +99,7 @@ class _SensitivityAdjustScreenState extends State<SensitivityAdjustScreen> {
                   'Z Axis: ${zAxis.toStringAsFixed(2)}',
                   style: TextStyle(
                     fontSize: 24,
-                    color: (zAxis < sensitivityThreshold && isProximityClose)
-                        ? Colors.black
-                        : Colors.white,
+                    color: (zAxis < sensitivityThreshold) ? Colors.red : Colors.white,
                     fontFamily: "Nothing_ALT",
                   ),
                 ),
@@ -109,9 +125,7 @@ class _SensitivityAdjustScreenState extends State<SensitivityAdjustScreen> {
                   "Sensitivity: $sensitivityThreshold",
                   style: TextStyle(
                     fontSize: 24,
-                    color: (zAxis < sensitivityThreshold && isProximityClose)
-                        ? Colors.black
-                        : Colors.white,
+                    color: (zAxis < sensitivityThreshold) ? Colors.red : Colors.white,
                     fontFamily: "Nothing_ALT",
                   ),
                 ),
@@ -130,12 +144,15 @@ class _SensitivityAdjustScreenState extends State<SensitivityAdjustScreen> {
                     const SizedBox(width: 10),
                     Switch(
                       value: isScreenOff,
-                      onChanged: (value) {
+                      onChanged: (value) async {
                         setState(() {
                           isScreenOff = value;
                         });
                         widget.onScreenOffChanged(value);
                         _saveScreenOffState(value); // Save the state
+                        if (value) {
+                          await _redirectToAccessibilitySettings();
+                        }
                       },
                       activeColor: Colors.red,
                       inactiveThumbColor: Colors.white,
